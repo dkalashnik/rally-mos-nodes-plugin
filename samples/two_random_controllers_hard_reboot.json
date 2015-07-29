@@ -1,0 +1,36 @@
+{
+    "ControllerDisaster.reboot_random_controllers": [
+        {
+            "args": {
+                "force_reboot": true,
+                "controllers_count": 2,
+                "controller_names": null,
+                "exclude_controllers": null,
+                "flavor": {
+                    "name": "m1.tiny"
+                },
+                "image": {
+                    "name": "TestVM"
+                },
+                "force_delete": false
+            },
+            "runner": {
+                "type": "serial",
+                "times": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "ssh_cloud": {
+                    "fuel_master_address": "172.18.165.70",
+                    "username": "root",
+                    "password": "r00tme",
+                    "transport_driver": "haos.rally.transport.ssh_transport.SSHTransport",
+                    "data_source": "astute"
+                }
+            }
+        }
+    ]
+}
