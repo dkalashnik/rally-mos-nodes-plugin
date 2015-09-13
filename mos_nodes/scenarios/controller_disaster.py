@@ -1,7 +1,8 @@
 import random
 import time
 
-from rally.task.scenarios import base
+from rally.task import atomic
+from rally.task import scenario
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.task import types
 from rally.task import validation
@@ -10,8 +11,8 @@ from rally import consts
 from nodes.host_actions import utils
 
 
-class ControllerScenario(base.Scenario):
-    @base.atomic_action_timer("controller.force_reboot")
+class ControllerScenario(scenario.Scenario):
+    @atomic.action_timer("controller.force_reboot")
     def force_reboot_controller(self, controller):
         controller.os.force_reboot()
         while True:
@@ -22,7 +23,7 @@ class ControllerScenario(base.Scenario):
             else:
                 time.sleep(1)
 
-    @base.atomic_action_timer("controller.grace_reboot")
+    @atomic.action_timer("controller.grace_reboot")
     def grace_reboot_controller(self, controller):
         controller.os.graceful_reboot()
         while True:
@@ -33,7 +34,7 @@ class ControllerScenario(base.Scenario):
             else:
                 time.sleep(1)
 
-    @base.atomic_action_timer("controller.boot")
+    @atomic.action_timer("controller.boot")
     def wait_for_boot(self, controller):
         while True:
             try:
@@ -43,7 +44,7 @@ class ControllerScenario(base.Scenario):
             else:
                 return
 
-    @base.atomic_action_timer("cluster.recovery")
+    @atomic.action_timer("cluster.recovery")
     def wait_for_cluster_online(self, cluster):
         utils.wait_for_cluster_online(cluster)
 
@@ -56,7 +57,7 @@ class ControllerDisaster(ControllerScenario,
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def reboot_random_controllers(self, image, flavor,
                                   force_reboot=True,
                                   force_delete=True,
@@ -99,7 +100,7 @@ class ControllerDisaster(ControllerScenario,
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def reboot_controller_with_primitive(self, resource, image, flavor,
                                          force_reboot=True,
                                          force_delete=True):
@@ -126,7 +127,7 @@ class ControllerDisaster(ControllerScenario,
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def reboot_controller_with_master_resource(self, resource, image, flavor,
                                                force_reboot=True,
                                                force_delete=True):

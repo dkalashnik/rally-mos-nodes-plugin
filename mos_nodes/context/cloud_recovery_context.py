@@ -4,7 +4,7 @@ from rally import consts
 from nodes.host_actions import utils
 
 
-@context.context(name="recover_cloud", order=900)
+@context.configure(name="recover_cloud", order=900)
 class CloudNodesContext(context.Context):
     """This context allows to recover cloud after disaster tests."""
 

@@ -6,7 +6,7 @@ from nodes.objects import cluster
 from nodes.objects import host
 
 
-@context.context(name="ssh_cloud", order=900)
+@context.configure(name="ssh_cloud", order=900)
 class CloudNodesContext(context.Context):
     CONFIG_SCHEMA = {
         "type": "object",
@@ -27,7 +27,7 @@ class CloudNodesContext(context.Context):
             },
             "transport_driver": {
                 "type": "string",
-                "default": "haos.transport.ssh_transport.SSHTransport"
+                "default": "nodes.transport.ssh_transport.SSHTransport"
             },
             "data_source": {
                 "type": "string",

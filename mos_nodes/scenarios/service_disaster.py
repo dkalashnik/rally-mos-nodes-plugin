@@ -1,24 +1,25 @@
-from rally.task.scenarios import base
+from rally.task import atomic
+from rally.task import scenario
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.task import types
 from rally.task import validation
 from rally import consts
 
 
-class ServiceScenario(base.Scenario):
-    @base.atomic_action_timer("service.kill")
+class ServiceScenario(scenario.Scenario):
+    @atomic.action_timer("service.kill")
     def kill_service_by_pid(self, controller, pid):
         pass
 
-    @base.atomic_action_timer("service.kill")
+    @atomic.action_timer("service.kill")
     def kill_service_by_name(self, controller, name):
         controller.os.killall_processes(name)
 
-    @base.atomic_action_timer("service.stop")
+    @atomic.action_timer("service.stop")
     def stop_service(self, cluster, name):
         pass
 
-    @base.atomic_action_timer("service.start")
+    @atomic.action_timer("service.start")
     def wait_for_service_start(self, controller, name):
         pass
 
@@ -30,7 +31,7 @@ class ServiceDisaster(ServiceScenario,
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def kill_master_resource(self, resource):
         cluster = self.context['cluster']
         controller = cluster.get_random_controller()
@@ -44,7 +45,7 @@ class ServiceDisaster(ServiceScenario,
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def stop_master_resource(self, resource):
         cluster = self.context['cluster']
         controller = cluster.get_random_controller()
