@@ -12,7 +12,12 @@ class SSHTransport(base.Transport):
         self.address = address
         self.username = username
         self.password = password
-        self.pkey = paramiko.RSAKey.from_private_key(cStringIO.StringIO(pkey))
+        if pkey is not None:
+            self.private_key = paramiko.RSAKey.\
+                from_private_key(cStringIO.StringIO(pkey))
+        else:
+            self.private_key = None
+
         self.look_for_keys = look_for_keys
         self.buf_size = 1024
 

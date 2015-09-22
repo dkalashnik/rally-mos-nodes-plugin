@@ -31,9 +31,9 @@ class PacemakerActionsClient(base.BaseHostActionsClient):
                 result.append(section)
         return result
 
-    def _get_resource_by_id(self, resources_list, resuorce_id):
+    def _get_resource_by_id(self, resources_list, resource_id):
         for resource in resources_list:
-            if resource.get('id') == resuorce_id:
+            if resource.get('id') == resource_id:
                 return resource
 
     def get_resource_node(self, resource_id):

@@ -6,7 +6,7 @@ from nodes.host_actions import utils
 
 @context.configure(name="recover_cloud", order=900)
 class CloudNodesContext(context.Context):
-    """This context allows to recover cloud after disaster tests."""
+    """This context waits for cloud recover after disaster tests."""
 
     CONFIG_SCHEMA = {
         "type": "object",
