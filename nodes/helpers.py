@@ -28,4 +28,4 @@ def wait_for(condition, timeout=100, interval=5):
             break
 
         time.sleep(interval)
-    raise exceptions.TimeoutException
+    raise exceptions.TimeoutException(message="Timeout")

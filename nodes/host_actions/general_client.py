@@ -37,7 +37,12 @@ class GeneralActionsClient(base.BaseHostActionsClient):
         self.transport.exec_command("reboot --force >/dev/null &")
 
     def kill_process_by_pid(self, pid):
-        pass
+        self.transport.exec_command("kill -9 {0}".format(pid))
 
     def killall_processes(self, name):
-        pass
+        self.transport.exec_command("killall -9 {0}".format(name))
+
+    def check_process(self, name):
+        ret_code, _, _ = self.transport.exec_sync(
+            "ps ax | grep {0} | grep -v grep".format(name))
+        return ret_code == 0

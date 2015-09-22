@@ -14,15 +14,16 @@ class Cluster(object):
         :param hosts: list of haos.objects.host.Host objects
         :return: instance of Cluster
         """
+        if hosts is None:
+            self.hosts = []
+            return
+
         if not all([isinstance(host, Host) for host in hosts]):
             raise ValueError
         if not isinstance(hosts, list):
             raise ValueError
 
-        if hosts is not None:
-            self.hosts = hosts
-        else:
-            self.hosts = []
+        self.hosts = hosts
 
     def __iter__(self):
         return iter(self.hosts)
@@ -70,7 +71,7 @@ class Cluster(object):
         self.hosts.append(host)
 
     def get_random_controller(self):
-        return random.choice(self.hosts)
+        return random.choice(self.filter_by_role("controller"))
 
 
 class Host(object):

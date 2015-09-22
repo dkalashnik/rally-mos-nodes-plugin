@@ -1,14 +1,13 @@
 import random
+import logging
 import time
 
 from rally.task import atomic
 from rally.task import scenario
-from rally.plugins.openstack.scenarios.nova import utils as nova_utils
-from rally.task import types
-from rally.task import validation
-from rally import consts
 
 from nodes.host_actions import utils
+
+logger = logging.getLogger(__name__)
 
 
 class ControllerScenario(scenario.Scenario):
@@ -49,102 +48,77 @@ class ControllerScenario(scenario.Scenario):
         utils.wait_for_cluster_online(cluster)
 
 
-class ControllerDisaster(ControllerScenario,
-                         nova_utils.NovaScenario):
+class ControllerDisaster(ControllerScenario):
 
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
-    @validation.image_valid_on_flavor("flavor", "image")
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
     @scenario.configure()
-    def reboot_random_controllers(self, image, flavor,
+    def reboot_random_controllers(self,
                                   force_reboot=True,
-                                  force_delete=True,
-                                  controllers_count=1,
-                                  controller_names=None,
-                                  exclude_controllers=None):
+                                  controllers_count=1):
         cluster = self.context['cluster']
+        controllers = cluster.filter_by_role("controller")
 
-        if not isinstance(exclude_controllers, list):
-            exclude_controllers = [exclude_controllers]
-
-        if not isinstance(controller_names, list):
-            controller_names = [controller_names]
-
-        if controller_names is None:
-            controllers = random.sample(
-                filter(lambda node: node.hostname not in exclude_controllers,
-                       cluster), controllers_count)
-        else:
-            controllers = []
-            for hostname in controller_names:
-                controllers.append(cluster.get_by_hostname(hostname))
+        controllers = random.sample(controllers, controllers_count)
+        logger.info("Choose {0} controllers to reboot: {1}"
+                    .format(controllers_count,
+                            ' '.join([controller.hostname
+                                      for controller in controllers])))
 
         for controller in controllers:
             if force_reboot:
+                logger.info("Force rebooting {0}".format(controller.hostname))
                 self.force_reboot_controller(controller)
             else:
+                logger.info("Grace rebooting {0}".format(controller.hostname))
                 self.grace_reboot_controller(controller)
 
         for controller in controllers:
             self.wait_for_boot(controller)
         self.wait_for_cluster_online(cluster)
 
-        server = self._boot_server(image, flavor)
-        self.sleep_between(10, 30)
-        self._delete_server(server, force=force_delete)
-
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
-    @validation.image_valid_on_flavor("flavor", "image")
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
     @scenario.configure()
-    def reboot_controller_with_primitive(self, resource, image, flavor,
-                                         force_reboot=True,
-                                         force_delete=True):
+    def reboot_controller_with_primitive(self,
+                                         resource,
+                                         force_reboot=True):
         cluster = self.context['cluster']
+        controllers = cluster.filter_by_role("controller")
 
-        controller = random.choice(cluster)
+        controller = random.choice(controllers)
+        logger.info("Search for controller with {0}".format(resource))
         node_name = controller.pacemaker.get_resource_node(resource)
         controller = cluster.get_by_hostname(node_name)
+        logger.info("Found {0} on controller {1}".format(resource,
+                                                         controller.hostname))
 
         if force_reboot:
+            logger.info("Force rebooting {0}".format(controller.hostname))
             self.force_reboot_controller(controller)
         else:
+            logger.info("Grace rebooting {0}".format(controller.hostname))
             self.grace_reboot_controller(controller)
 
         self.wait_for_boot(controller)
         self.wait_for_cluster_online(cluster)
 
-        server = self._boot_server(image, flavor)
-        self.sleep_between(10, 30)
-        self._delete_server(server, force=force_delete)
-
-    @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType)
-    @validation.image_valid_on_flavor("flavor", "image")
-    @validation.required_services(consts.Service.NOVA)
-    @validation.required_openstack(users=True)
     @scenario.configure()
-    def reboot_controller_with_master_resource(self, resource, image, flavor,
-                                               force_reboot=True,
-                                               force_delete=True):
+    def reboot_controller_with_master_resource(self,
+                                               resource,
+                                               force_reboot=True):
         cluster = self.context['cluster']
+        controllers = cluster.filter_by_role("controller")
 
-        controller = random.choice(cluster)
+        controller = random.choice(controllers)
+        logger.info("Search for controller with {0}".format(resource))
         node_name = controller.pacemaker.get_clone_set_master_node(resource)
         controller = cluster.get_by_hostname(node_name)
+        logger.info("Found {0} on controller {1}".format(resource,
+                                                         controller.hostname))
 
         if force_reboot:
+            logger.info("Force rebooting {0}".format(controller.hostname))
             self.force_reboot_controller(controller)
         else:
+            logger.info("Grace rebooting {0}".format(controller.hostname))
             self.grace_reboot_controller(controller)
 
         self.wait_for_boot(controller)
         self.wait_for_cluster_online(cluster)
-
-        server = self._boot_server(image, flavor)
-        self.sleep_between(10, 30)
-        self._delete_server(server, force=force_delete)
