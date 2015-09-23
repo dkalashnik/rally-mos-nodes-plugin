@@ -6,7 +6,7 @@ from rally.task import runner
 from rally.task import utils as butils
 
 
-@runner.configure(name="constant_for_duration")
+@runner.configure(name="constant_for_duration_with_break")
 class ConstantForDurationWithPauseScenarioRunner(runner.ScenarioRunner):
     """Extends common constant_for_duration runner with configurable sleep.
 
