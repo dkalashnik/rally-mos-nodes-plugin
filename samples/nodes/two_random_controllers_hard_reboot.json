@@ -3,11 +3,20 @@
         {
             "args": {
                 "force_reboot": true,
-                "controllers_count": 2
+                "controllers_count": 2,
+                "wait_between": 300,
+                "boot_server": true,
+                "flavor": {
+                    "name": "m1.tiny"
+                },
+                "image": {
+                    "name": "TestVM"
+                },
+                "force_delete": false
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 5
             },
             "context": {
                 "ssh_cloud": {

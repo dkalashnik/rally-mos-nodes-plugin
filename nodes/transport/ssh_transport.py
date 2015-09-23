@@ -1,6 +1,6 @@
 import cStringIO
-import select
 import logging
+import select
 
 import paramiko
 

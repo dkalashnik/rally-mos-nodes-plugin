@@ -11,7 +11,7 @@ class EmptyCluster(rally_exceptions.RallyException):
 
 
 class TimeoutException(rally_exceptions.RallyException):
-    msg_fmt = _("Request timed out. %(message)")
+    msg_fmt = _("Request timed out.")
 
 
 class SSHTimeout(rally_exceptions.RallyException):

@@ -1,7 +1,11 @@
+import logging
+
 from lxml import etree
 
 from nodes import helpers
 from nodes.host_actions import base
+
+logger = logging.getLogger(__name__)
 
 
 class PacemakerActionsClient(base.BaseHostActionsClient):
@@ -40,8 +44,10 @@ class PacemakerActionsClient(base.BaseHostActionsClient):
         resources = self._get_first_subsection(self._get_crm_mon_xml(),
                                                'resources')
         resources = self._get_subsections_list(resources, 'resource')
-        public_vip = self._get_resource_by_id(resources, resource_id)
-        return self._get_first_subsection(public_vip, 'node').get('name')
+        resource = self._get_resource_by_id(resources, resource_id)
+        node_name = self._get_first_subsection(resource, 'node').get('name')
+        logger.info("Found {0} on node {1}".format(resource, node_name))
+        return node_name
 
     def _get_clone_set_nodes_by_conditions(self,
                                            clone_set_conditions,
@@ -63,29 +69,38 @@ class PacemakerActionsClient(base.BaseHostActionsClient):
         return result
 
     def get_clone_set_nodes(self, resource_id):
-        return self._get_clone_set_nodes_by_conditions(
+        nodes = self._get_clone_set_nodes_by_conditions(
             clone_set_conditions=[],
             resource_conditions=[
                 lambda resource: resource.get('id') == resource_id,
                 lambda resource: resource.get('active') == 'true'])
+        logger.info("Found {0} resource on nodes: {1}"
+                    .format(resource_id, ', '.join(nodes)))
+        return nodes
 
     def get_clone_set_master_node(self, resource_id):
-        return self._get_clone_set_nodes_by_conditions(
+        node = self._get_clone_set_nodes_by_conditions(
             clone_set_conditions=[
                 lambda clone_set: clone_set.get('multi_state') == 'true'],
             resource_conditions=[
                 lambda resource: resource.get('id') == resource_id,
                 lambda resource: resource.get('active') == 'true',
-                lambda resource: resource.get('role') == 'Master'])
+                lambda resource: resource.get('role') == 'Master'])[0]
+        logger.info("Found Master {0} resource on node: {1}"
+                    .format(resource_id, node))
+        return node
 
     def get_clone_get_slave_nodes(self, resource_id):
-        return self._get_clone_set_nodes_by_conditions(
+        nodes = self._get_clone_set_nodes_by_conditions(
             clone_set_conditions=[
                 lambda clone_set: clone_set.get('multi_state') == 'true'],
             resource_conditions=[
                 lambda resource: resource.get('id') == resource_id,
                 lambda resource: resource.get('active') == 'true',
                 lambda resource: resource.get('role') == 'Slave'])
+        logger.info("Found Slave {0} resource on nodes: {1}"
+                    .format(resource_id, ', '.join(nodes)))
+        return nodes
 
     def get_public_vip_node(self):
         resource_id = 'vip__public'

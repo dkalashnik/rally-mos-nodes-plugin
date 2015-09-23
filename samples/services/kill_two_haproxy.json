@@ -1,0 +1,30 @@
+{
+    "ServiceDisaster.kill_clone_set_random_resource": [
+        {
+            "args": {
+                "resource": "p_haproxy",
+                "process_name": "haproxy",
+                "wait_between": 60,
+                "boot_server": true,
+                "nodes_count": 2,
+                "flavor": {
+                    "name": "m1.tiny"
+                },
+                "image": {
+                    "name": "TestVM"
+                },
+                "force_delete": false
+            },
+            "runner": {
+                "type": "serial",
+                "times": 5
+            },
+            "context": {
+                "ssh_cloud": {
+                    "transport_driver": "nodes.transport.ssh_transport.SSHTransport",
+                    "nodes": {{nodes}}
+                }
+            }
+        }
+    ]
+}

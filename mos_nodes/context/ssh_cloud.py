@@ -1,5 +1,5 @@
-from rally.task import context
 from rally import consts
+from rally.task import context
 
 from nodes import objects
 

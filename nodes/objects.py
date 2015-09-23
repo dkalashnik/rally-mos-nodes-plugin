@@ -14,16 +14,12 @@ class Cluster(object):
         :param hosts: list of haos.objects.host.Host objects
         :return: instance of Cluster
         """
-        if hosts is None:
-            self.hosts = []
-            return
+        self.hosts = hosts or []
 
         if not all([isinstance(host, Host) for host in hosts]):
             raise ValueError
         if not isinstance(hosts, list):
             raise ValueError
-
-        self.hosts = hosts
 
     def __iter__(self):
         return iter(self.hosts)
@@ -80,12 +76,7 @@ class Host(object):
         self.transport = importutils.import_object(transport_driver,
                                                    address, *args, **kwargs)
         self.address = address
-
-        if roles is None:
-            self.roles = []
-        else:
-            self.roles = roles
-
+        self.roles = roles or []
         self.exec_command = self.transport.exec_command
 
     @property

@@ -1,3 +1,5 @@
+import time
+
 from nodes import helpers
 
 
@@ -31,7 +33,7 @@ def check_rabbitmq_queues_sync(controller):
 def wait_for_cluster_online(cluster):
     master_node = cluster.filter_by_role("master").first()
     helpers.wait_for(
-        lambda: check_all_nodes_online_nailgun(master_node))
+        lambda: check_all_nodes_online_nailgun(master_node), timeout=600)
 
     controllers = cluster.filter_by_role("controller")
     for node in controllers:
@@ -41,3 +43,5 @@ def wait_for_cluster_online(cluster):
             node, len(controllers)))
         helpers.wait_for(lambda: check_rabbitmq_queues_sync(
             node))
+
+    time.sleep(5)

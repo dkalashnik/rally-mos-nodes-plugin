@@ -3,11 +3,20 @@
         {
             "args": {
                 "resource": "vip__public",
-                "force_reboot": true
+                "force_reboot": false,
+                "wait_between": 300,
+                "boot_server": false,
+                "flavor": {
+                    "name": "m1.tiny"
+                },
+                "image": {
+                    "name": "TestVM"
+                },
+                "force_delete": false
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 5
             },
             "context": {
                 "ssh_cloud": {

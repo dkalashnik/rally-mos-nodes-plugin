@@ -2,12 +2,21 @@
     "ControllerDisaster.reboot_random_controllers": [
         {
             "args": {
-                "force_reboot": true,
-                "controllers_count": 2
+                "force_reboot": false,
+                "controllers_count": 3,
+                "wait_between": 300,
+                "boot_server": true,
+                "flavor": {
+                    "name": "m1.tiny"
+                },
+                "image": {
+                    "name": "TestVM"
+                },
+                "force_delete": false
             },
             "runner": {
                 "type": "serial",
-                "times": 1
+                "times": 5
             },
             "context": {
                 "ssh_cloud": {

@@ -15,7 +15,7 @@ def lazy_property(method):
     return lazyproperty
 
 
-def wait_for(condition, timeout=100, interval=5):
+def wait_for(condition, timeout=150, interval=5):
     start_time = int(time.time())
     while True:
         try:
