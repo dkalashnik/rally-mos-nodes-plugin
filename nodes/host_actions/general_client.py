@@ -71,7 +71,7 @@ class GeneralActionsClient(base.BaseHostActionsClient):
     def tcp_ping(self):
         try:
             s = socket.socket()
-            s.connect(self.transport.address, 22)
+            s.connect((self.transport.address, 22))
             s.close()
         except socket.error:
             return False
