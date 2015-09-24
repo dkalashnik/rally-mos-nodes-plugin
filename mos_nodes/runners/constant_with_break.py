@@ -6,6 +6,15 @@ from rally.task import runner
 from rally.task import utils as butils
 
 
+def _run_scenario_once_with_sleep(args):
+    iteration, cls, method_name, context_obj, kwargs, pause = args
+
+    # Time to take a break
+    time.sleep(pause)
+    args = (iteration, cls, method_name, context_obj, kwargs)
+    return runner._run_scenario_once(args)
+
+
 @runner.configure(name="constant_for_duration_with_break")
 class ConstantForDurationWithPauseScenarioRunner(runner.ScenarioRunner):
     """Extends common constant_for_duration runner with configurable sleep.
@@ -47,18 +56,9 @@ class ConstantForDurationWithPauseScenarioRunner(runner.ScenarioRunner):
         def _scenario_args(i):
             if aborted.is_set():
                 raise StopIteration()
-            return (pause, i, cls, method,
-                    runner._get_scenario_context(ctx), args)
+            return (i, cls, method,
+                    runner._get_scenario_context(ctx), args, pause)
         return _scenario_args
-
-    @staticmethod
-    def _run_scenario_once_with_sleep(args):
-        pause, iteration, cls, method_name, context_obj, kwargs = args
-
-        # Time to take a break
-        time.sleep(pause)
-        return runner._run_scenario_once((iteration, cls, method_name,
-                                          context_obj, kwargs))
 
     def _run_scenario(self, cls, method, context, args):
         """Runs the specified benchmark scenario with given arguments.
@@ -82,7 +82,7 @@ class ConstantForDurationWithPauseScenarioRunner(runner.ScenarioRunner):
         run_args = butils.infinite_run_args_generator(
             self._iter_scenario_args(cls, method, context, args,
                                      self.aborted, pause))
-        iter_result = pool.imap(runner._run_scenario_once, run_args)
+        iter_result = pool.imap(_run_scenario_once_with_sleep, run_args)
 
         start = time.time()
         while True:
