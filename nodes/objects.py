@@ -16,9 +16,9 @@ class Cluster(object):
         """
         self.hosts = hosts or []
 
-        if not all([isinstance(host, Host) for host in hosts]):
+        if not all([isinstance(host, Host) for host in self.hosts]):
             raise ValueError
-        if not isinstance(hosts, list):
+        if not isinstance(self.hosts, list):
             raise ValueError
 
     def __iter__(self):
