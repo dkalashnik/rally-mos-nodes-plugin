@@ -36,11 +36,11 @@ class GeneralActionsClient(base.BaseHostActionsClient):
 
     def graceful_reboot(self):
         logger.info("Grace reboot node: {0}".format(self.hostname))
-        self.transport.exec_command("nohup reboot >/dev/null &")
+        self.transport.exec_command("/sbin/reboot > /dev/null 2>&1 &")
 
     def force_reboot(self):
         logger.info("Force reboot node: {0}".format(self.hostname))
-        self.transport.exec_command("reboot --force >/dev/null &")
+        self.transport.exec_command("/sbin/reboot -f > /dev/null 2>&1 &")
 
     def get_pids(self, process_name):
         cmd = ("ps -ef | grep {0} | grep -v 'grep' | "
@@ -66,13 +66,22 @@ class GeneralActionsClient(base.BaseHostActionsClient):
     def check_process(self, name):
         ret_code, _, _ = self.transport.exec_sync(
             "ps ax | grep {0} | grep -v grep".format(name))
-        return ret_code == 0
+        if ret_code == 0:
+            logger.info("Found {0} process on nodes {1}"
+                        .format(name, self.hostname))
+            return True
+        logger.info("Not found {0} process on nodes {1}"
+                    .format(name, self.hostname))
+        return False
 
-    def tcp_ping(self):
+    def tcp_ping(self, port=22):
         try:
+            logger.info("Opening {0} 22".format(self.transport.address))
             s = socket.socket()
-            s.connect((self.transport.address, 22))
+            s.connect((self.transport.address, port))
             s.close()
         except socket.error:
+            logger.info("Socket error")
             return False
+        logger.info("Socket ok")
         return True

@@ -18,8 +18,9 @@ class ControllerScenario(scenario.Scenario):
     @atomic.action_timer("controller.force_reboot")
     def force_reboot_controller(self, controller):
         controller.os.force_reboot()
-        while controller.os.tcp_ping():
-            time.sleep(1)
+        # NOTE(dkalashnik): waiter here is a kinda useless,
+        # so just sleep for 10 seconds.
+        time.sleep(10)
 
     @atomic.action_timer("controller.grace_reboot")
     def grace_reboot_controller(self, controller):
@@ -37,8 +38,95 @@ class ControllerScenario(scenario.Scenario):
         utils.wait_for_cluster_online(cluster)
 
 
-class ControllerDisaster(ControllerScenario,
-                         nova_utils.NovaScenario):
+class ControllerRobustness(ControllerScenario):
+
+    @scenario.configure()
+    def reboot_random_controllers(self,
+                                  force_reboot=True,
+                                  controllers_count=1,
+                                  wait_between=60):
+        cluster = self.context['cluster']
+        controllers = cluster.filter_by_role("controller")
+        controllers = random.sample(controllers, controllers_count)
+
+        for controller in controllers:
+            if force_reboot:
+                self.force_reboot_controller(controller)
+            else:
+                self.grace_reboot_controller(controller)
+
+        for controller in controllers:
+            self.wait_for_boot(controller)
+
+        self.wait_for_cluster_online(cluster)
+
+        time.sleep(wait_between)
+
+    @scenario.configure()
+    def sequential_controllers_reboot(self,
+                                      force_reboot=True,
+                                      controllers_count=1,
+                                      wait_between=60):
+        cluster = self.context['cluster']
+        controllers = cluster.filter_by_role("controller")
+        controllers = random.sample(controllers, controllers_count)
+
+        for controller in controllers:
+            if force_reboot:
+                self.force_reboot_controller(controller)
+            else:
+                self.grace_reboot_controller(controller)
+
+            self.wait_for_boot(controller)
+            self.wait_for_cluster_online(cluster)
+
+        time.sleep(wait_between)
+
+    @scenario.configure()
+    def reboot_controller_with_primitive(self, resource,
+                                         force_reboot=True,
+                                         wait_between=60):
+
+        cluster = self.context['cluster']
+        controllers = cluster.filter_by_role("controller")
+        controller = random.choice(controllers)
+        node_name = controller.pacemaker.get_resource_node(resource)
+        controller = cluster.get_by_hostname(node_name)
+
+        if force_reboot:
+            self.force_reboot_controller(controller)
+        else:
+            self.grace_reboot_controller(controller)
+
+        self.wait_for_boot(controller)
+        self.wait_for_cluster_online(cluster)
+
+        time.sleep(wait_between)
+
+    @scenario.configure()
+    def reboot_controller_with_master_resource(self, resource,
+                                               force_reboot=True,
+                                               wait_between=60):
+        cluster = self.context['cluster']
+        controllers = cluster.filter_by_role("controller")
+
+        controller = random.choice(controllers)
+        node_name = controller.pacemaker.get_clone_set_master_node(resource)
+        controller = cluster.get_by_hostname(node_name)
+
+        if force_reboot:
+            self.force_reboot_controller(controller)
+        else:
+            self.grace_reboot_controller(controller)
+
+        self.wait_for_boot(controller)
+        self.wait_for_cluster_online(cluster)
+
+        time.sleep(wait_between)
+
+
+class ControllerRobustnessNovaCheck(ControllerScenario,
+                                    nova_utils.NovaScenario):
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
@@ -47,30 +135,28 @@ class ControllerDisaster(ControllerScenario,
     @scenario.configure()
     def reboot_random_controllers(self, image, flavor,
                                   force_reboot=True, controllers_count=1,
-                                  wait_between=60, boot_server=True,
-                                  force_delete=False):
+                                  wait_between=60, force_delete=False):
         cluster = self.context['cluster']
         controllers = cluster.filter_by_role("controller")
 
         controllers = random.sample(controllers, controllers_count)
-        logger.info("Choose {0} controllers to reboot: {1}"
-                    .format(controllers_count,
-                            ' '.join([controller.hostname
-                                      for controller in controllers])))
 
         for controller in controllers:
             if force_reboot:
                 self.force_reboot_controller(controller)
             else:
                 self.grace_reboot_controller(controller)
+
         for controller in controllers:
             self.wait_for_boot(controller)
         self.wait_for_cluster_online(cluster)
 
-        if boot_server:
-            server = self._boot_server(image, flavor)
-            self.sleep_between(10, 30)
-            self._delete_server(server, force=force_delete)
+        # NOTE(dkalashnik): Wait for keystone-memcache consistency
+        time.sleep(300)
+
+        server = self._boot_server(image, flavor)
+        self.sleep_between(10, 30)
+        self._delete_server(server, force=force_delete)
 
         time.sleep(wait_between)
 
@@ -86,25 +172,23 @@ class ControllerDisaster(ControllerScenario,
                                       force_delete=False):
         cluster = self.context['cluster']
         controllers = cluster.filter_by_role("controller")
-
         controllers = random.sample(controllers, controllers_count)
-        logger.info("Choose {0} controllers to reboot: {1}"
-                    .format(controllers_count,
-                            ' '.join([controller.hostname
-                                      for controller in controllers])))
 
         for controller in controllers:
             if force_reboot:
                 self.force_reboot_controller(controller)
             else:
                 self.grace_reboot_controller(controller)
+
             self.wait_for_boot(controller)
             self.wait_for_cluster_online(cluster)
 
-        if boot_server:
-            server = self._boot_server(image, flavor)
-            self.sleep_between(10, 30)
-            self._delete_server(server, force=force_delete)
+        # NOTE(dkalashnik): Wait for keystone-memcache consistency
+        time.sleep(300)
+
+        server = self._boot_server(image, flavor)
+        self.sleep_between(10, 30)
+        self._delete_server(server, force=force_delete)
 
         time.sleep(wait_between)
 
@@ -119,7 +203,6 @@ class ControllerDisaster(ControllerScenario,
                                          boot_server=True, force_delete=False):
         cluster = self.context['cluster']
         controllers = cluster.filter_by_role("controller")
-
         controller = random.choice(controllers)
         node_name = controller.pacemaker.get_resource_node(resource)
         controller = cluster.get_by_hostname(node_name)
@@ -132,10 +215,12 @@ class ControllerDisaster(ControllerScenario,
         self.wait_for_boot(controller)
         self.wait_for_cluster_online(cluster)
 
-        if boot_server:
-            server = self._boot_server(image, flavor)
-            self.sleep_between(10, 30)
-            self._delete_server(server, force=force_delete)
+        # NOTE(dkalashnik): Wait for keystone-memcache consistency
+        time.sleep(300)
+
+        server = self._boot_server(image, flavor)
+        self.sleep_between(10, 30)
+        self._delete_server(server, force=force_delete)
 
         time.sleep(wait_between)
 
@@ -154,25 +239,22 @@ class ControllerDisaster(ControllerScenario,
         controllers = cluster.filter_by_role("controller")
 
         controller = random.choice(controllers)
-        logger.info("Search for controller with {0}".format(resource))
         node_name = controller.pacemaker.get_clone_set_master_node(resource)
         controller = cluster.get_by_hostname(node_name)
-        logger.info("Found {0} on controller {1}".format(resource,
-                                                         controller.hostname))
 
         if force_reboot:
-            logger.info("Force rebooting {0}".format(controller.hostname))
             self.force_reboot_controller(controller)
         else:
-            logger.info("Grace rebooting {0}".format(controller.hostname))
             self.grace_reboot_controller(controller)
 
         self.wait_for_boot(controller)
         self.wait_for_cluster_online(cluster)
 
-        if boot_server:
-            server = self._boot_server(image, flavor)
-            self.sleep_between(10, 30)
-            self._delete_server(server, force=force_delete)
+        # NOTE(dkalashnik): Wait for keystone-memcache consistency
+        time.sleep(300)
+
+        server = self._boot_server(image, flavor)
+        self.sleep_between(10, 30)
+        self._delete_server(server, force=force_delete)
 
         time.sleep(wait_between)
