@@ -46,7 +46,7 @@ class PacemakerActionsClient(base.BaseHostActionsClient):
         resources = self._get_subsections_list(resources, 'resource')
         resource = self._get_resource_by_id(resources, resource_id)
         node_name = self._get_first_subsection(resource, 'node').get('name')
-        logger.info("Found {0} on node {1}".format(resource, node_name))
+        logger.info("Found {0} on node {1}".format(resource_id, node_name))
         return node_name
 
     def _get_clone_set_nodes_by_conditions(self,

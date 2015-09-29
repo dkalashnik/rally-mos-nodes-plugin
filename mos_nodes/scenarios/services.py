@@ -22,7 +22,7 @@ class ServiceScenario(scenario.Scenario):
                     .format(name, controller.hostname))
         controller.os.kill_process_by_name(name)
 
-    @atomic.action_timer("sevice.start")
+    @atomic.action_timer("service.start")
     def wait_for_service_start(self, controller, name):
         logger.info("Start waiting for {0} on {1}"
                     .format(name, controller.hostname))
@@ -33,8 +33,7 @@ class ServiceScenario(scenario.Scenario):
         utils.wait_for_cluster_online(cluster)
 
 
-class ServiceRobustness(ServiceScenario,
-                        nova_utils.NovaScenario):
+class ServiceRobustness(ServiceScenario):
 
     @scenario.configure()
     def kill_master_resource(self, resource, process_name,
