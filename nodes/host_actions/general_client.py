@@ -43,9 +43,9 @@ class GeneralActionsClient(base.BaseHostActionsClient):
         self.transport.exec_command("/sbin/reboot -f > /dev/null 2>&1 &")
 
     def get_pids(self, process_name):
-        cmd = ("ps -ef | grep {0} | grep -v 'grep' | "
-               "awk {'print $2'}".format(process_name))
-        return self.transport.exec_command(cmd).split('\n')
+        cmd = ("ps -ef | grep %s | grep -v 'grep' | "
+               "awk {'print $2'}" % process_name)
+        return self.transport.exec_command(cmd).strip().split('\n')
 
     def kill_process_by_pid(self, pid):
         logger.info("Killing process pid {0} on node {1}"

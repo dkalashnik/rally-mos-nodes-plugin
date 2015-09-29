@@ -1,11 +1,12 @@
 {
-    "ServiceDisaster.kill_process_on_random_node": [
+    "ServiceRobustnessNovaCheck.kill_clone_set_random_resource": [
         {
             "args": {
-                "process_name": "nova-compute",
+                "resource": "p_haproxy",
+                "process_name": "haproxy",
                 "wait_between": 60,
                 "boot_server": true,
-                "nodes_count": 1,
+                "nodes_count": 2,
                 "flavor": {
                     "name": "m1.tiny"
                 },

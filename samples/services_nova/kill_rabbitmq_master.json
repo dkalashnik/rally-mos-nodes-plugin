@@ -1,5 +1,5 @@
 {
-    "ServiceDisaster.kill_master_resource": [
+    "ServiceRobustnessNovaCheck.kill_master_resource": [
         {
             "args": {
                 "resource": "p_rabbitmq-server",
